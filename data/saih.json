@@ -1,10 +1,64 @@
 {
   "version": 3,
-  "retrieved_at": "2026-10-21T20:35:38.179743+00:00",
+  "retrieved_at": "2026-10-21T20:53:12.132874+00:00",
   "source": "SAIH Ebro, tabla pública Alto Ebro (margen izquierda/derecha)",
   "source_pages": {
     "H1": null,
     "H15": null
+  },
+  "probes": {
+    "H1": [
+      {
+        "url": "https://saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
+        "ok": false,
+        "error": "<urlopen error timed out>",
+        "elapsed_s": 9.1
+      },
+      {
+        "url": "https://www.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
+        "ok": false,
+        "error": "<urlopen error timed out>",
+        "elapsed_s": 9.14
+      },
+      {
+        "url": "https://web.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
+        "ok": false,
+        "error": "<urlopen error timed out>",
+        "elapsed_s": 9.11
+      },
+      {
+        "url": "https://internet.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
+        "ok": false,
+        "error": "<urlopen error timed out>",
+        "elapsed_s": 9.12
+      }
+    ],
+    "H15": [
+      {
+        "url": "https://saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
+        "ok": false,
+        "error": "<urlopen error timed out>",
+        "elapsed_s": 9.13
+      },
+      {
+        "url": "https://www.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
+        "ok": false,
+        "error": "<urlopen error timed out>",
+        "elapsed_s": 9.13
+      },
+      {
+        "url": "https://web.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
+        "ok": false,
+        "error": "<urlopen error timed out>",
+        "elapsed_s": 9.1
+      },
+      {
+        "url": "https://internet.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
+        "ok": false,
+        "error": "<urlopen error timed out>",
+        "elapsed_s": 9.11
+      }
+    ]
   },
   "readings": {
     "A026": {
@@ -59,8 +113,8 @@
     "A161": []
   },
   "errors": {
-    "H1": "www.saihebro.com: <urlopen error timed out> | internet.saihebro.com: <urlopen error timed out>",
-    "H15": "www.saihebro.com: <urlopen error timed out> | internet.saihebro.com: <urlopen error timed out>"
+    "H1": "https://saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error timed out> | https://www.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error timed out> | https://web.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error timed out> | https://internet.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error timed out>",
+    "H15": "https://saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error timed out> | https://www.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error timed out> | https://web.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error timed out> | https://internet.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error timed out>"
   },
   "fresh_count": 0,
   "published_count": 0,
