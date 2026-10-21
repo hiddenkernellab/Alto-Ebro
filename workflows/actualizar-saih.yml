@@ -1,0 +1,48 @@
+name: Actualizar SAIH y publicar panel
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: riadas-alto-ebro
+  cancel-in-progress: false
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recoger lecturas SAIH Ebro
+        run: python update_saih.py
+      - name: Guardar series observadas
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/saih.json
+          if ! git diff --staged --quiet; then
+            git commit -m 'Actualizar mediciones públicas SAIH Ebro'
+            git push
+          fi
+      - name: Preparar web pública
+        run: |
+          mkdir -p site
+          cp index.html manifest.webmanifest sw.js site/
+          cp -r icons data site/
+          touch site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: './site'
+      - name: Publicar aplicación en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
