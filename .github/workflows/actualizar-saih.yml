@@ -1,7 +1,7 @@
 name: Actualizar SAIH y publicar panel
 on:
   schedule:
-    - cron: '7,37 * * * *'
+    - cron: '1 * * * *'
   workflow_dispatch:
 permissions:
   contents: write
