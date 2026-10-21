@@ -1,1 +1,69 @@
-{"version":3,"retrieved_at":"2026-10-21T20:15:44.964160+00:00","source":"SAIH Ebro, lecturas de las fichas públicas","sources":{"A026":"https://www.saihebro.com/tiempo-real/estacion-aforos-A026","A279":"https://www.saihebro.com/tiempo-real/estacion-aforos-A279-rudron-valdelateja","A093":"https://www.saihebro.com/tiempo-real/estacion-aforos-A093-oca-ona","A092":"https://www.saihebro.com/tiempo-real/estacion-aforos-A092-nela-trespaderne","A283":"https://www.saihebro.com/tiempo-real/estacion-aforos-A283-nela-villarcayo","A161":"https://www.saihebro.com/tiempo-real/estacion-aforos-A161-ebro-palazuelos"},"readings":{"A026":{"status":"error_consulta","stale":true,"flow":null,"date":""},"A279":{"status":"error_consulta","stale":true,"flow":null,"date":""},"A093":{"status":"error_consulta","stale":true,"flow":null,"date":""},"A092":{"status":"error_consulta","stale":true,"flow":null,"date":""},"A283":{"status":"error_consulta","stale":true,"flow":null,"date":""},"A161":{"status":"error_consulta","stale":true,"flow":null,"date":""}},"history":{"A026":[],"A279":[],"A093":[],"A092":[],"A283":[],"A161":[]},"errors":{"A026":"<urlopen error timed out>","A279":"<urlopen error timed out>","A093":"<urlopen error timed out>","A092":"<urlopen error timed out>","A283":"<urlopen error timed out>","A161":"<urlopen error timed out>"},"fresh_count":0,"note":"Datos observados, no predicciones. No es una herramienta operativa."}
+{
+  "version": 3,
+  "retrieved_at": "2026-10-21T20:35:38.179743+00:00",
+  "source": "SAIH Ebro, tabla pública Alto Ebro (margen izquierda/derecha)",
+  "source_pages": {
+    "H1": null,
+    "H15": null
+  },
+  "readings": {
+    "A026": {
+      "status": "sin_datos",
+      "stale": true,
+      "flow": null,
+      "date": "",
+      "observation_time_verified": false
+    },
+    "A279": {
+      "status": "sin_datos",
+      "stale": true,
+      "flow": null,
+      "date": "",
+      "observation_time_verified": false
+    },
+    "A093": {
+      "status": "sin_datos",
+      "stale": true,
+      "flow": null,
+      "date": "",
+      "observation_time_verified": false
+    },
+    "A092": {
+      "status": "sin_datos",
+      "stale": true,
+      "flow": null,
+      "date": "",
+      "observation_time_verified": false
+    },
+    "A283": {
+      "status": "sin_datos",
+      "stale": true,
+      "flow": null,
+      "date": "",
+      "observation_time_verified": false
+    },
+    "A161": {
+      "status": "sin_datos",
+      "stale": true,
+      "flow": null,
+      "date": "",
+      "observation_time_verified": false
+    }
+  },
+  "history": {
+    "A026": [],
+    "A279": [],
+    "A093": [],
+    "A092": [],
+    "A283": [],
+    "A161": []
+  },
+  "errors": {
+    "H1": "www.saihebro.com: <urlopen error timed out> | internet.saihebro.com: <urlopen error timed out>",
+    "H15": "www.saihebro.com: <urlopen error timed out> | internet.saihebro.com: <urlopen error timed out>"
+  },
+  "fresh_count": 0,
+  "published_count": 0,
+  "notes": [],
+  "note": "Valores de tablas públicas sin fecha de observación verificada. Las series son capturas fechadas al consultar, NO mediciones quinceminutales oficiales. NO uso operativo."
+}
