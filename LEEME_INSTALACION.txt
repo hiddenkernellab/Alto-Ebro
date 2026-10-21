@@ -1,0 +1,66 @@
+PANEL DE RIADAS ALTO EBRO · v0.3 · APP WEB PARA ANDROID (PWA)
+=============================================================
+IMPORTANTE: es un prototipo informativo de datos públicos, NO es una alerta,
+modelo hidrológico calibrado ni herramienta para operar presas.
+
+QUÉ HACE
+- Seleccionar presa: Cereceda, Cillaperlata, Quintanilla Escalada.
+- Consultar aforos SAIH relacionados con cada una y graficar 24 h / 7 d / 30 d / 1 año.
+- Consultar por Internet lluvia prevista (Open-Meteo, directo).
+- Descargar/introducir CSV histórico SAIH de forma local.
+- Calcular escenarios NO calibrados con distancia fluvial y celeridad introducidas.
+- GitHub Actions intenta recoger las lecturas actuales del SAIH cada 30 minutos
+  y añadir las observaciones válidas al registro público. La ejecución no es puntual garantizada.
+- Muestra marcas temporales y oculta como 'actual' cualquier lectura >2 h.
+
+INSTALACIÓN EN GITHUB (SIN SERVIDOR ENCENDIDO)
+1. Crea un repositorio NUEVO y PÚBLICO, por ejemplo 'riadas-alto-ebro',
+   en https://github.com/new. No uses tu repositorio de consolas y no subas
+   documentación privada ni datos internos de Iberdrola.
+2. Descomprime el ZIP y copia a la RAÍZ del repositorio todos los archivos
+   y carpetas, incluyendo la carpeta oculta '.github'. Puedes hacerlo
+   desde GitHub Desktop (clonar repo, pegar contenido y Publish/Push), o
+   con 'Add file > Upload files' si se conservan las carpetas y sus rutas.
+   IMPORTANTE: NO subas el ZIP sin extraerlo, ni crees una carpeta adicional
+   'Panel_Riadas_Alto_Ebro_v0.3_PWA' por encima del index.html.
+3. Ve al repositorio > Settings > Actions > General > Workflow permissions y
+   marca 'Read and write permissions' si está disponible.
+4. Ve a Settings > Pages > Build and deployment > Source: 'GitHub Actions'.
+5. Abre Actions > 'Actualizar SAIH y publicar panel' > Run workflow > Run workflow.
+   En el registro comprueba que haya terminado con todas las etapas verdes.
+6. La app se publicará en https://TU_USUARIO.github.io/riadas-alto-ebro/
+   (si el repo lleva ese nombre).
+7. Abre la URL en Chrome Android > menú ⋮ > Instalar aplicación o
+   Añadir a pantalla de inicio. Funcionará como PWA con icono propio.
+
+SIN PUBLICAR EN GITHUB: puedes abrir index.html desde el móvil y ver lluvia
+prevista si tiene Internet, pero NO obtendrás caudales SAIH automáticos.
+Para probar el panel en un ordenador antes de publicar:
+  python -m http.server 8000
+  abrir http://localhost:8000/
+Con los datos iniciales vacíos se verá 'sin datos' hasta la primera recogida.
+
+LIMITACIONES Y DATOS
+- GitHub Pages PUBLICA la web y los ficheros de caudales recolectados públicamente.
+- No recopilar contraseñas, datos internos ni telemetría de instalaciones.
+- La exportación CSV del SAIH puede incluir histórico de hasta 365 días; el panel
+  automático empieza vacío y conserva como máximo 92 días (última semana sin
+  reducción; periodo anterior, hasta una muestra por hora).
+- Los intervalos de 30 min de GitHub Actions pueden retrasarse, fallar o
+  suspenderse en repositorios públicos inactivos; comprobar hora en el panel.
+- No se pueden dar horas de llegada ni estimaciones de caudal en presa sin
+  curvas históricas sincronizadas y análisis hidrológico validado.
+- El SAIH puede cambiar sus páginas: en tal caso el lector Python no funcionará
+  y se marcarán las estaciones sin lectura, sin inventar datos.
+- Dependencia de Open-Meteo: las predicciones de lluvia son aproximadas por punto.
+- Condiciones y atribución de fuente: SAIH Ebro (CHE) y Open-Meteo (CC BY 4.0).
+
+CUENCAS
+Quintanilla Escalada: A026 Ebro Arroyo (distante aguas arriba).
+Cereceda: A026 Ebro Arroyo y A279 Rudrón Valdelateja.
+Cillaperlata: Ebro, Rudrón, Oca y Nela. Jerea se excluye expresamente
+por confluencia aguas abajo de la presa (según información de operación local).
+A283 Nela Villarcayo es anidada en A092 Trespaderne: no sumar.
+A161 Ebro Palazuelos sirve como referencia aguas abajo: no sumar.
+Todos estos puntos y relaciones deben contrastarse con cartografía y fichas
+oficiales antes de usarse para evaluaciones profesionales.
