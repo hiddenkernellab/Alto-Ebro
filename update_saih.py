@@ -1,141 +1,239 @@
 #!/usr/bin/env python3
-"""Obtiene lecturas públicas de estaciones SAIH Ebro y conserva series observadas.
-No es un sistema de alerta ni una fuente de decisiones operativas. Python 3.10+.
+"""Alto Ebro: captador experimental de aforos publicados en tablas públicas.
+
+NO es un servicio de alertas ni mide caudales en presas.
+Las tablas no proporcionan aquí una hora individual verificable: la hora de
+consulta NO equivale a hora de medición. Conservamos esa distinción.
 """
 import json
-import os
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.request import Request, urlopen
-from zoneinfo import ZoneInfo
 
-BASE = Path(__file__).resolve().parent
-OUT = BASE / 'data' / 'saih.json'
-MADRID = ZoneInfo('Europe/Madrid')
-STATIONS = {
-  'A026': 'https://www.saihebro.com/tiempo-real/estacion-aforos-A026',
-  'A279': 'https://www.saihebro.com/tiempo-real/estacion-aforos-A279-rudron-valdelateja',
-  'A093': 'https://www.saihebro.com/tiempo-real/estacion-aforos-A093-oca-ona',
-  'A092': 'https://www.saihebro.com/tiempo-real/estacion-aforos-A092-nela-trespaderne',
-  'A283': 'https://www.saihebro.com/tiempo-real/estacion-aforos-A283-nela-villarcayo',
-  'A161': 'https://www.saihebro.com/tiempo-real/estacion-aforos-A161-ebro-palazuelos',
+ROOT = Path(__file__).resolve().parent
+TARGET = ROOT / 'data' / 'saih.json'
+STATIONS = ('A026', 'A279', 'A093', 'A092', 'A283', 'A161')
+PAGES = {
+    'H1': '/tiempo-real/mapa-aforos-H1-alto-ebro-mi',
+    'H15': '/tiempo-real/mapa-aforos-H15-alto-ebro-md',
 }
+# Hosts alternativos de la web oficial; las fichas individuales fallaron.
+HOSTS = ('www.saihebro.com', 'internet.saihebro.com')
+FLOW_RX = re.compile(r'(?<![\d.,])([0-9][\d.,]*)\s*m\s*[³3]\s*/\s*s', re.I)
+CODE_RX = re.compile(r'\bA\d{3}\b')
 
-class HtmlTables(HTMLParser):
+class TableParser(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
-        self.inside_row = False
-        self.cell_level = 0
-        self.cell = ''
-        self.row = []
-        self.rows = []
+        self.rows, self._row, self._cell = [], None, None
+        self._depth = 0
+        self.all_text = []
+        self.skip = 0
+
     def handle_starttag(self, tag, attrs):
-        if tag == 'tr' and not self.inside_row:
-            self.inside_row, self.row = True, []
-        elif tag in ('th', 'td') and self.inside_row:
-            self.cell_level += 1
-            if self.cell_level == 1: self.cell = ''
+        if tag in ('script', 'style', 'svg'):
+            self.skip += 1
+        if self.skip:
+            return
+        if tag == 'tr':
+            self._row = []
+        elif tag in ('td', 'th') and self._row is not None:
+            if self._depth == 0:
+                self._cell = []
+            self._depth += 1
+
     def handle_data(self, data):
-        if self.inside_row and self.cell_level:
-            self.cell += data + ' '
+        if self.skip:
+            return
+        txt = data.strip()
+        if txt:
+            self.all_text.append(txt)
+        if txt and self._cell is not None:
+            self._cell.append(txt)
+
     def handle_endtag(self, tag):
-        if tag in ('th', 'td') and self.inside_row and self.cell_level:
-            self.cell_level -= 1
-            if self.cell_level == 0: self.row.append(' '.join(self.cell.split()))
-        elif tag == 'tr' and self.inside_row:
-            if self.row: self.rows.append(self.row)
-            self.inside_row = False
+        if tag in ('script', 'style', 'svg') and self.skip:
+            self.skip -= 1
+        if self.skip:
+            return
+        if tag in ('td', 'th') and self._depth:
+            self._depth -= 1
+            if self._depth == 0 and self._row is not None:
+                self._row.append(' '.join(self._cell or []))
+                self._cell = None
+        elif tag == 'tr' and self._row is not None:
+            if self._row:
+                self.rows.append(self._row)
+            self._row = None
 
-# A161 muestra 'Caudal Ebro ... (Rio)' y 'Caudal Total Ebro ... (Rio + Canal)'.
-# Priorizamos solo el caudal del cauce, nunca el total combinado.
-def parse_flow(html: str, code: str):
-    p = HtmlTables(); p.feed(html)
-    choices = []
-    for row in p.rows:
-        if len(row) != 4 or not re.search(r'\bcaudal\b', row[0], re.I):
+
+def number(text):
+    raw = text.replace(' ', '')
+    if ',' in raw:
+        raw = raw.replace('.', '').replace(',', '.')
+    else:
+        if raw.count('.') > 1:
+            return None
+    try:
+        q = float(raw)
+    except ValueError:
+        return None
+    return round(q, 3) if 0 <= q < 1_000_000 else None
+
+
+def extract_flows(html):
+    parser = TableParser()
+    parser.feed(html)
+    found = {}
+    # Las filas de los mapas contienen código, nombre, nivel y caudal.
+    # Solo extraer magnitudes m³/s: NUNCA confundir altura en m con caudal.
+    for cells in parser.rows:
+        if len(cells) < 3:
             continue
-        if code == 'A161' and re.search(r'\btotal\b', row[0], re.I):
+        code = next((m.group(0) for c in cells[:2] if (m := CODE_RX.search(c))), None)
+        if code not in STATIONS:
             continue
-        m = re.search(r'([-+]?\d[\d.,]*)\s*m\s*[³3]\s*/\s*s', row[1], re.I)
-        d = re.search(r'\b(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})\b', row[2])
-        if not m or not d: continue
-        raw = m.group(1)
-        if ',' in raw: raw = raw.replace('.', '').replace(',', '.')
-        try:
-            flow = float(raw)
-            dt = datetime.strptime(d.group(1), '%d/%m/%Y %H:%M').replace(tzinfo=MADRID)
-        except ValueError: continue
-        if not 0 <= flow < 1_000_000: continue
-        age = (datetime.now(timezone.utc) - dt.astimezone(timezone.utc)).total_seconds() / 3600
-        # Lectura con marca temporal >2 h no se considera actual; nunca devolver como caudal vivo.
-        fresh = -0.25 <= age <= 2.0
-        choices.append({'flow': flow if fresh else None,
-                        'observed_flow': flow,
-                        'date': d.group(1), 'iso': dt.isoformat(),
-                        'hours_old': round(age, 2),
-                        'stale': not fresh, 'status':'ok' if fresh else 'antiguo_o_invalido'})
-    if choices:
-        return max(choices, key=lambda z:z['iso'])
-    return {'flow': None, 'observed_flow': None, 'stale': True, 'status':'sin_datos', 'date':''}
+        # La última celda correspondiente a 'Caudal' tiene la unidad m³/s.
+        # Omitir las primeras celdas que contienen código/nombre/nivel.
+        matches = [m for cell in cells[2:] for m in FLOW_RX.finditer(cell)]
+        if matches:
+            q = number(matches[-1].group(1))
+            if q is not None:
+                found[code] = q
 
-def fetch_station(code: str, url: str):
-    req = Request(url, headers={
-      'User-Agent':'Mozilla/5.0 (compatible; AltoEbroPanel/0.3; publicly available data)',
-      'Accept':'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5',
-      'Accept-Language':'es-ES,es;q=0.9',
-    })
-    with urlopen(req, timeout=18) as r:
-        if r.status != 200: raise RuntimeError(f'HTTP {r.status}')
-        return parse_flow(r.read(2_000_000).decode('utf-8', errors='replace'),code)
+    if found:
+        return found
 
-def save_archive(old, recent):
-    now = datetime.now(timezone.utc)
-    short = now - timedelta(days=7)
-    long = now - timedelta(days=92)
-    # Últimos 7 días: se conserva cada lectura; resto: una muestra por hora.
-    samples = {}
-    for p in old:
+    # Plan B ante tablas implementadas en otros elementos HTML, pero se exige
+    # el mismo orden visual entre códigos y una unidad explícita m³/s.
+    texts = ' '.join(parser.all_text)
+    codes = list(CODE_RX.finditer(texts))
+    for i, match in enumerate(codes):
+        code = match.group(0)
+        if code not in STATIONS:
+            continue
+        end = codes[i + 1].start() if i + 1 < len(codes) else min(len(texts), match.end() + 400)
+        segment = texts[match.end():min(end, match.end() + 400)]
+        m = FLOW_RX.search(segment)
+        if m:
+            q = number(m.group(1))
+            if q is not None:
+                found[code] = q
+    return found
+
+
+def download(page):
+    attempts = []
+    for host in HOSTS:
+        url = f'https://{host}{page}'
         try:
-            t = datetime.fromisoformat(p['date']).astimezone(timezone.utc)
-            q = float(p['flow'])
-        except (TypeError, ValueError, KeyError): continue
-        if long <= t <= now + timedelta(minutes=15) and 0 <= q < 1_000_000:
-            key = p['date'] if t >= short else str(int(t.timestamp() // 3600))
-            samples[key] = {'date':p['date'], 'flow':round(q, 3)}
-    if recent.get('status') == 'ok':
-        samples[recent['iso']] = {'date':recent['iso'], 'flow':round(recent['flow'],3)}
-    return sorted(samples.values(), key=lambda p:p['date'])
+            req = Request(url, headers={
+                'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/123.0 Safari/537.36',
+                'Accept':'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+                'Accept-Language':'es-ES,es;q=0.9',
+                'Cache-Control':'no-cache',
+            })
+            with urlopen(req, timeout=12) as res:
+                if res.status != 200:
+                    raise RuntimeError('HTTP '+str(res.status))
+                html = res.read(2_500_000).decode('utf-8', errors='replace')
+            values = extract_flows(html)
+            if not values:
+                raise RuntimeError('La página no contiene caudales reconocibles')
+            return {'url':url, 'values':values, 'issues':attempts}
+        except Exception as exc:
+            attempts.append(f'{host}: {str(exc)[:130]}')
+    return {'url':None, 'values':{}, 'issues':attempts}
+
+
+def merge_history(previous, station, new_flow, checked_at):
+    # Las series son FOTOGRAFÍAS DE LA TABLA tomadas al consultar, no medidas
+    # originales de la estación. No inventar interpolación entre consultas.
+    now = datetime.fromisoformat(checked_at)
+    min_date = now - timedelta(days=90)
+    points = {}
+    for point in previous or []:
+        try:
+            d = datetime.fromisoformat(point['date'])
+            q = float(point['flow'])
+            if d.tzinfo and min_date <= d <= now and 0 <= q < 1_000_000:
+                points[d.isoformat()] = {'date': d.isoformat(), 'flow':q, 'source_type':point.get('source_type','legacy_unknown')}
+        except (ValueError, TypeError, KeyError):
+            continue
+    if new_flow is not None:
+        points[checked_at] = {'date':checked_at,'flow':new_flow,'source_type':'snapshot_table_no_station_timestamp'}
+    return sorted(points.values(), key=lambda p:p['date'])[-10000:]
+
 
 def main():
-    try: old = json.loads(OUT.read_text(encoding='utf-8'))
-    except (OSError, ValueError): old = {}
-    archive = old.get('history') or {}
-    readings, errors = {}, {}
-    for code, url in STATIONS.items():
-        try:
-            item = fetch_station(code,url)
-            readings[code] = item
-            print(f"{code}: {item.get('date', '?')} / {item.get('status', '?')} / {item.get('flow')}")
-        except Exception as e:
-            readings[code] = {'status':'error_consulta','stale':True,'flow':None,'date':''}
-            errors[code] = str(e)[:180]
-            print(f'{code}: ERROR {errors[code]}', file=sys.stderr)
-        archive[code] = save_archive(archive.get(code,[]), readings[code])
-    record = {'version':3, 'retrieved_at':datetime.now(timezone.utc).isoformat(),
-              'source':'SAIH Ebro, lecturas de las fichas públicas',
-              'sources':STATIONS, 'readings':readings, 'history':archive,
-              'errors':errors, 'fresh_count':sum(x.get('status')=='ok' for x in readings.values()),
-              'note':'Datos observados, no predicciones. No es una herramienta operativa.'}
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    temp = OUT.with_suffix('.tmp')
-    temp.write_text(json.dumps(record,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
-    temp.replace(OUT)
-    # El fallo total no invalida la web: publica estado con errores visibles para el usuario.
-    if record['fresh_count'] == 0:
-        print('AVISO: ninguna estación tiene lectura reciente verificable.',file=sys.stderr)
-    return 0
+    try:
+        previous = json.loads(TARGET.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        previous = {}
 
-if __name__ == '__main__': raise SystemExit(main())
+    checked_at = datetime.now(timezone.utc).isoformat()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        jobs = {k: pool.submit(download, p) for k,p in PAGES.items()}
+        results = {k: fut.result() for k,fut in jobs.items()}
+
+    # No combinar ni SUMAR valores de estaciones anidadas.
+    # Coincidencia A026 en ambas páginas: tomar primera lectura y advertir
+    # si no coincide; son snapshots tomados en momentos diferentes.
+    values, station_pages, notices = {}, {}, []
+    for group in ('H1','H15'):
+        response = results[group]
+        for code, q in response['values'].items():
+            if code in values and abs(values[code] - q) > 0.001:
+                notices.append(f'{code}: dos tablas discrepan ({values[code]} frente a {q}); sin reconciliación automática')
+                continue
+            values.setdefault(code,q)
+            station_pages.setdefault(code,response['url'])
+
+    oldhist = previous.get('history') or {}
+    historical, readings = {}, {}
+    for station in STATIONS:
+        val = values.get(station)
+        if val is None:
+            readings[station] = {'status':'sin_datos','stale':True,'flow':None,'date':'',
+                                 'observation_time_verified':False}
+        else:
+            readings[station] = {'status':'publicado_sin_hora','stale':True,
+                 'flow':val, 'observed_flow':val, 'date':'',
+                 'checked_at':checked_at,'source_url':station_pages[station],
+                 'observation_time_verified':False}
+        historical[station] = merge_history(oldhist.get(station,[]), station, val, checked_at)
+
+    errors = {group:' | '.join(info['issues']) if info['issues'] else '' for group,info in results.items() if not info['values']}
+    rec = {
+        'version':3,
+        'retrieved_at':checked_at,
+        'source':'SAIH Ebro, tabla pública Alto Ebro (margen izquierda/derecha)',
+        'source_pages': {k:v['url'] for k,v in results.items()},
+        'readings': readings,
+        'history': historical,
+        'errors':errors,
+        'fresh_count':0,  # ninguna lectura tiene hora original contrastada
+        'published_count':len(values),
+        'notes':notices,
+        'note':'Valores de tablas públicas sin fecha de observación verificada. Las series son capturas fechadas al consultar, NO mediciones quinceminutales oficiales. NO uso operativo.'
+    }
+    TARGET.parent.mkdir(parents=True, exist_ok=True)
+    tmp = TARGET.with_suffix('.tmp')
+    tmp.write_text(json.dumps(rec,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    tmp.replace(TARGET)
+    for grp, result in results.items():
+        print(f"{grp}: {len(result['values'])} estaciones obtenidas | fuente: {result['url']} | problemas: {result['issues']}")
+    for st,val in values.items():
+        print(f'{st}: {val} m³/s (hora individual de medida NO verificada)')
+    if errors:
+        print('ATENCIÓN: consultas sin datos: '+json.dumps(errors,ensure_ascii=False),file=sys.stderr)
+    if not values:
+        print('SIN MEDICIONES: revisar conectividad/estructura de las tablas.', file=sys.stderr)
+    return 0  # publicar estado incluso si falla red, para inspección del JSON
+
+if __name__ == '__main__':
+    raise SystemExit(main())
