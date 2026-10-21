@@ -6,6 +6,9 @@ Las tablas no proporcionan aquí una hora individual verificable: la hora de
 consulta NO equivale a hora de medición. Conservamos esa distinción.
 """
 import json
+import os
+import socket
+import time
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -13,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 ROOT = Path(__file__).resolve().parent
 TARGET = ROOT / 'data' / 'saih.json'
@@ -22,7 +26,7 @@ PAGES = {
     'H15': '/tiempo-real/mapa-aforos-H15-alto-ebro-md',
 }
 # Hosts alternativos de la web oficial; las fichas individuales fallaron.
-HOSTS = ('www.saihebro.com', 'internet.saihebro.com')
+HOSTS = ('saihebro.com', 'www.saihebro.com', 'web.saihebro.com', 'internet.saihebro.com')
 FLOW_RX = re.compile(r'(?<![\d.,])([0-9][\d.,]*)\s*m\s*[³3]\s*/\s*s', re.I)
 CODE_RX = re.compile(r'\bA\d{3}\b')
 
@@ -126,28 +130,51 @@ def extract_flows(html):
     return found
 
 
+def fetch_one(host, page):
+    url = f'https://{host}{page}'
+    attempt = {'url': url, 'ok': False}
+    started = time.monotonic()
+    try:
+        req = Request(url, headers={
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'es-ES,es;q=0.9',
+            'Cache-Control': 'no-cache',
+        })
+        with urlopen(req, timeout=9) as res:
+            attempt['status'] = res.status
+            attempt['final_url'] = res.geturl()
+            if res.status != 200:
+                raise RuntimeError('HTTP ' + str(res.status))
+            html = res.read(3_000_000).decode('utf-8', errors='replace')
+        values = extract_flows(html)
+        attempt['bytes'] = len(html)
+        attempt['stations'] = len(values)
+        if not values:
+            raise RuntimeError('El HTML no contiene códigos y valores de caudal reconocibles')
+        attempt['ok'] = True
+        return attempt, values
+    except (HTTPError, URLError, TimeoutError, OSError, RuntimeError, ValueError) as exc:
+        attempt['error'] = str(exc)[:240]
+        return attempt, {}
+    finally:
+        attempt['elapsed_s'] = round(time.monotonic() - started, 2)
+
+
 def download(page):
-    attempts = []
-    for host in HOSTS:
-        url = f'https://{host}{page}'
-        try:
-            req = Request(url, headers={
-                'User-Agent':'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/123.0 Safari/537.36',
-                'Accept':'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
-                'Accept-Language':'es-ES,es;q=0.9',
-                'Cache-Control':'no-cache',
-            })
-            with urlopen(req, timeout=12) as res:
-                if res.status != 200:
-                    raise RuntimeError('HTTP '+str(res.status))
-                html = res.read(2_500_000).decode('utf-8', errors='replace')
-            values = extract_flows(html)
-            if not values:
-                raise RuntimeError('La página no contiene caudales reconocibles')
-            return {'url':url, 'values':values, 'issues':attempts}
-        except Exception as exc:
-            attempts.append(f'{host}: {str(exc)[:130]}')
-    return {'url':None, 'values':{}, 'issues':attempts}
+    # Se prueban varios nombres de host de forma simultánea: ningún timeout
+    # bloquea los demás. Solo se aceptan respuestas que contengan aforos.
+    with ThreadPoolExecutor(max_workers=len(HOSTS)) as ex:
+        futures = [ex.submit(fetch_one, host, page) for host in HOSTS]
+        attempts = [f.result() for f in futures]
+    successful = [(diagnostic, values) for diagnostic, values in attempts if diagnostic['ok']]
+    if not successful:
+        return {'url': None, 'values': {}, 'probes': [d for d, v in attempts],
+                'issues': [f"{d['url']}: {d.get('error', 'sin caudal')}" for d, v in attempts]}
+    # Priorizar el dominio oficial sobre alias. No sumar respuestas distintas.
+    chosen, values = successful[0]
+    return {'url': chosen['final_url'], 'values': values,
+            'probes': [d for d, v in attempts], 'issues': []}
 
 
 def merge_history(previous, station, new_flow, checked_at):
@@ -213,6 +240,7 @@ def main():
         'retrieved_at':checked_at,
         'source':'SAIH Ebro, tabla pública Alto Ebro (margen izquierda/derecha)',
         'source_pages': {k:v['url'] for k,v in results.items()},
+        'probes': {k:v['probes'] for k,v in results.items()},
         'readings': readings,
         'history': historical,
         'errors':errors,
@@ -226,14 +254,16 @@ def main():
     tmp.write_text(json.dumps(rec,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     tmp.replace(TARGET)
     for grp, result in results.items():
-        print(f"{grp}: {len(result['values'])} estaciones obtenidas | fuente: {result['url']} | problemas: {result['issues']}")
+        print(f"{grp}: {len(result['values'])} estaciones obtenidas | fuente: {result['url']}")
+        for item in result['probes']:
+            print(f"  {item['url']}: HTTP={item.get('status','—')} caudales={item.get('stations',0)} tiempo={item['elapsed_s']}s error={item.get('error','—')}")
     for st,val in values.items():
         print(f'{st}: {val} m³/s (hora individual de medida NO verificada)')
     if errors:
         print('ATENCIÓN: consultas sin datos: '+json.dumps(errors,ensure_ascii=False),file=sys.stderr)
     if not values:
         print('SIN MEDICIONES: revisar conectividad/estructura de las tablas.', file=sys.stderr)
-    return 0  # publicar estado incluso si falla red, para inspección del JSON
+    return 0  # publicar estado y diagnóstico incluso si falla la red
 
 if __name__ == '__main__':
     raise SystemExit(main())
