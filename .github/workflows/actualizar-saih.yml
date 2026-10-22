@@ -36,7 +36,7 @@ jobs:
       - name: Preparar web pública
         run: |
           mkdir -p site
-          cp index.html manifest.webmanifest sw.js site/
+          cp index.html visor_10min.html manifest.webmanifest sw.js site/
           cp -r icons data site/
           touch site/.nojekyll
       - uses: actions/configure-pages@v5
