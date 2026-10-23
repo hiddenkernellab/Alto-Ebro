@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "retrieved_at": "2026-10-23T20:02:56.784006+00:00",
+  "retrieved_at": "2026-10-23T23:02:49.382117+00:00",
   "source": "SAIH Ebro, tabla pública Alto Ebro (margen izquierda/derecha)",
   "source_pages": {
     "H1": null,
@@ -12,25 +12,25 @@
         "url": "https://saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.12
+        "elapsed_s": 9.14
       },
       {
         "url": "https://www.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.12
+        "elapsed_s": 9.17
       },
       {
         "url": "https://web.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.14
+        "elapsed_s": 9.16
       },
       {
         "url": "https://internet.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.16
+        "elapsed_s": 9.15
       }
     ],
     "H15": [
@@ -38,25 +38,25 @@
         "url": "https://saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.12
+        "elapsed_s": 9.16
       },
       {
         "url": "https://www.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.12
+        "elapsed_s": 9.16
       },
       {
         "url": "https://web.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.13
+        "elapsed_s": 9.14
       },
       {
         "url": "https://internet.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.16
+        "elapsed_s": 9.14
       }
     ]
   },
