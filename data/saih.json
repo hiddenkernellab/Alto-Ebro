@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "retrieved_at": "2026-10-24T21:50:24.515731+00:00",
+  "retrieved_at": "2026-10-24T23:48:10.582816+00:00",
   "source": "SAIH Ebro, tabla pública Alto Ebro (margen izquierda/derecha)",
   "source_pages": {
     "H1": null,
@@ -12,19 +12,19 @@
         "url": "https://saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.11
+        "elapsed_s": 9.12
       },
       {
         "url": "https://www.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.09
+        "elapsed_s": 9.16
       },
       {
         "url": "https://web.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.09
+        "elapsed_s": 9.13
       },
       {
         "url": "https://internet.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
@@ -38,25 +38,25 @@
         "url": "https://saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.1
+        "elapsed_s": 9.16
       },
       {
         "url": "https://www.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.08
+        "elapsed_s": 9.15
       },
       {
         "url": "https://web.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.07
+        "elapsed_s": 9.12
       },
       {
         "url": "https://internet.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
         "error": "<urlopen error timed out>",
-        "elapsed_s": 9.11
+        "elapsed_s": 9.1
       }
     ]
   },
