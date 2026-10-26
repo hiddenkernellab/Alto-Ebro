@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "retrieved_at": "2026-10-26T19:24:25.525846+00:00",
+  "retrieved_at": "2026-10-26T23:11:41.208326+00:00",
   "source": "SAIH Ebro, tabla pública Alto Ebro (margen izquierda/derecha)",
   "source_pages": {
     "H1": null,
@@ -11,52 +11,52 @@
       {
         "url": "https://saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
-        "error": "<urlopen error timed out>",
-        "elapsed_s": 9.16
+        "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+        "elapsed_s": 0.34
       },
       {
         "url": "https://www.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
-        "error": "<urlopen error timed out>",
-        "elapsed_s": 9.1
+        "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+        "elapsed_s": 0.35
       },
       {
         "url": "https://web.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
-        "error": "<urlopen error timed out>",
-        "elapsed_s": 9.07
+        "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+        "elapsed_s": 0.37
       },
       {
         "url": "https://internet.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi",
         "ok": false,
-        "error": "<urlopen error timed out>",
-        "elapsed_s": 9.12
+        "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+        "elapsed_s": 0.38
       }
     ],
     "H15": [
       {
         "url": "https://saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
-        "error": "<urlopen error timed out>",
-        "elapsed_s": 9.15
+        "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+        "elapsed_s": 0.33
       },
       {
         "url": "https://www.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
-        "error": "<urlopen error timed out>",
-        "elapsed_s": 9.12
+        "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+        "elapsed_s": 0.34
       },
       {
         "url": "https://web.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
-        "error": "<urlopen error timed out>",
-        "elapsed_s": 9.13
+        "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+        "elapsed_s": 0.36
       },
       {
         "url": "https://internet.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md",
         "ok": false,
-        "error": "<urlopen error timed out>",
-        "elapsed_s": 9.11
+        "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+        "elapsed_s": 0.37
       }
     ]
   },
@@ -113,8 +113,8 @@
     "A161": []
   },
   "errors": {
-    "H1": "https://saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error timed out> | https://www.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error timed out> | https://web.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error timed out> | https://internet.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error timed out>",
-    "H15": "https://saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error timed out> | https://www.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error timed out> | https://web.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error timed out> | https://internet.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error timed out>"
+    "H1": "https://saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)> | https://www.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)> | https://web.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)> | https://internet.saihebro.com/tiempo-real/mapa-aforos-H1-alto-ebro-mi: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+    "H15": "https://saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)> | https://www.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)> | https://web.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)> | https://internet.saihebro.com/tiempo-real/mapa-aforos-H15-alto-ebro-md: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>"
   },
   "fresh_count": 0,
   "published_count": 0,
